@@ -7,6 +7,7 @@
 #include <semaphore.h>
 
 #include "server.h"
+#include "list.h"
 
 static void *thread_worker(void *);
 
@@ -23,6 +24,62 @@ typedef struct
     int thread_id;
     server_t *server;
 } thread_args_t;
+
+typedef enum
+{
+    GET,
+    POST,
+    HEAD,
+    CONNECT,
+    OPTIONS,
+    PUT,
+    DELETE
+} http_method_t;
+
+typedef struct
+{
+    bool headers_rxd;
+    bool body_rxd;
+    bool headers_txd;
+    bool body_txd;
+    char *path;
+    http_method_t method;
+    list_t *req_headers;
+    char *req_body;
+} http_t;
+
+http_t *http_init(void)
+{
+    http_t *http = calloc(1, sizeof(http_t));
+
+    return http;
+}
+
+void http_destroy(http_t *http)
+{
+    if (http->req_headers)
+    {
+        list_destroy(http->req_headers);
+    }
+
+    if (http->req_body)
+    {
+        free(http->req_body);
+    }
+
+    free(http);
+}
+
+// void http_read_headers(client_conn_info *conn, http_t *http)
+// {
+//     int n;
+//     char buffer[128];
+
+//     while ((n = recv(conn->sock_fd, &buffer, 128, 0)) != -1)
+//     {
+//         recv()
+//     }
+// }
 
 server_t *
 server_init(int max_threads, void (*handler)(int, int, struct sockaddr_in))
@@ -108,7 +165,7 @@ void server_serve(server_t *server, int port)
     // join all threads
     for (i = 0; i < server->max_threads; ++i)
     {
-        pthread_join(&threads[i], NULL);
+        pthread_join(threads[i], NULL);
     }
 
     queue_destroy(server->connections);
