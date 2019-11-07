@@ -10,14 +10,15 @@ static server_client_t *client_conn;
 
 void dispatcher_thread_cleanup(void *t_args)
 {
-    // do any cleanup here...
+    dispatcher_thread_args_t *args = (dispatcher_thread_args_t *)t_args;
+
     if (client_conn)
     {
         free(client_conn);
         client_conn = NULL;
     }
 
-    printf("Dispatcher thread stopped!\n");
+    printf("[%d] Dispatcher thread stopped!\n", args->thread_id);
 }
 
 void *dispatcher_thread_worker(void *t_args)
@@ -26,7 +27,7 @@ void *dispatcher_thread_worker(void *t_args)
 
     pthread_cleanup_push(dispatcher_thread_cleanup, t_args);
 
-    printf("Dispatcher thread started!\n");
+    printf("[%d] Dispatcher thread started!\n", args->thread_id);
 
     while (true)
     {
