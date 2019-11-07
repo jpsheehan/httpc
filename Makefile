@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Werror -Wall
+CFLAGS=-g -Werror -Wall
 DEPS=server.o queue.o list.o buffer.o http.o dispatcher.o worker.o
 
 all: core
