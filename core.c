@@ -5,7 +5,6 @@
 #include "server.h"
 #include "http.h"
 
-#define NUM_WORKERS 10
 #define PORT 8080
 
 void handle_connection(int thread_id, int sock_fd, struct sockaddr_in addr)
@@ -24,7 +23,7 @@ void handle_connection(int thread_id, int sock_fd, struct sockaddr_in addr)
 
 int main(int argc, char *argv[])
 {
-    server_t *server = server_init(NUM_WORKERS, handle_connection);
+    server_t *server = server_init(handle_connection);
 
     server_serve(server, PORT);
 

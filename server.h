@@ -21,7 +21,7 @@ typedef struct
     server_t *server;
 } server_client_t;
 
-server_t *server_init(int max_threads, void (*handler)(int, int, struct sockaddr_in));
+server_t *server_init(void (*handler)(int, int, struct sockaddr_in));
 
 void server_destroy(server_t *server);
 

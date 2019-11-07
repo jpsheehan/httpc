@@ -5,6 +5,7 @@
 
 typedef struct
 {
+    int thread_id;
     server_t *server;
 } dispatcher_thread_args_t;
 

@@ -12,29 +12,33 @@
 #include "list.h"
 #include "buffer.h"
 #include "worker.h"
+#include "config.h"
 
-static pthread_t dispatcher_thread;
+static pthread_t *dispatcher_threads;
 
 void signal_handler(int sig)
 {
+    int i;
     switch (sig)
     {
     case SIGINT:
-        // cancel the dispatcher thread
-        pthread_cancel(dispatcher_thread);
+        // cancel the dispatcher threads
+        for (i = 0; i < CONFIG_NUM_DISPATCHER_THREADS; ++i)
+        {
+            pthread_cancel(dispatcher_threads[i]);
+        }
         break;
     }
 }
 
-server_t *server_init(int max_threads, void (*handler)(int, int, struct sockaddr_in))
+server_t *server_init(void (*handler)(int, int, struct sockaddr_in))
 {
     server_t *server = (server_t *)malloc(sizeof(server_t));
 
     if (server)
     {
-        server->max_threads = max_threads;
         server->connection_handler = handler;
-        server->connections = queue_init(max_threads);
+        server->connections = queue_init(CONFIG_CONNECTION_QUEUE_SIZE);
         server->sock_fd = -1;
     }
 
@@ -50,16 +54,16 @@ void server_destroy(server_t *server)
 void server_serve(server_t *server, int port)
 {
     server_client_t *client_conn;
-    pthread_t worker_threads[server->max_threads];
-    worker_thread_args_t worker_args[server->max_threads];
-    dispatcher_thread_args_t dispatcher_args;
+    pthread_t worker_threads[CONFIG_NUM_WORKER_THREADS];
+    worker_thread_args_t worker_args[CONFIG_NUM_WORKER_THREADS];
+    dispatcher_thread_args_t dispatcher_args[CONFIG_NUM_DISPATCHER_THREADS];
 
     int opt = 0, i;
     struct sockaddr_in address;
     int address_len = sizeof(address);
 
     // start workers
-    for (i = 0; i < server->max_threads; ++i)
+    for (i = 0; i < CONFIG_NUM_WORKER_THREADS; ++i)
     {
         worker_args[i] = (worker_thread_args_t){i, server};
         pthread_create(&worker_threads[i], NULL, &worker_thread, &worker_args[i]);
@@ -93,25 +97,34 @@ void server_serve(server_t *server, int port)
     // listen on the socket
     listen(server->sock_fd, port);
 
-    // start dispatcher
-    dispatcher_args.server = server;
-    pthread_create(&dispatcher_thread, NULL, &dispatcher_thread_worker, &dispatcher_args);
+    // start dispatchers
+    dispatcher_threads = calloc(CONFIG_NUM_DISPATCHER_THREADS, sizeof(pthread_t));
+    for (i = 0; i < CONFIG_NUM_DISPATCHER_THREADS; ++i)
+    {
+        dispatcher_args[i] = (dispatcher_thread_args_t){i, server};
+        pthread_create(&dispatcher_threads[i], NULL, &dispatcher_thread_worker, &dispatcher_args[i]);
+    }
 
     // print a nice message and set the SIGINT handler
     printf("Listening on http://127.0.0.1:%d/\n", port);
     signal(SIGINT, signal_handler);
 
-    // wait for dispatcher to be cancelled (as a result of SIGINT, etc)
-    pthread_join(dispatcher_thread, NULL);
+    // wait for dispatchers to be cancelled (as a result of SIGINT, etc)
+    for (i = 0; i < CONFIG_NUM_DISPATCHER_THREADS; ++i)
+    {
+        pthread_join(dispatcher_threads[i], NULL);
+    }
+
+    free(dispatcher_threads);
 
     // cancel all worker threads
-    for (i = 0; i < server->max_threads; ++i)
+    for (i = 0; i < CONFIG_NUM_WORKER_THREADS; ++i)
     {
         pthread_cancel(worker_threads[i]);
     }
 
     // free all worker threads
-    for (i = 0; i < server->max_threads; ++i)
+    for (i = 0; i < CONFIG_NUM_WORKER_THREADS; ++i)
     {
         pthread_join(worker_threads[i], NULL);
     }
