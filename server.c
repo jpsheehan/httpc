@@ -5,12 +5,19 @@
 #include <netinet/in.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <signal.h>
 
 #include "server.h"
 #include "list.h"
 #include "buffer.h"
 
 static void *thread_worker(void *);
+
+void signal_handler(int);
+
+void thread_cleanup(void *t_args);
+
+static bool accepting_connections;
 
 typedef struct
 {
@@ -91,7 +98,10 @@ void server_serve(server_t *server, int port)
     listen(server_fd, port);
     printf("Listening on http://127.0.0.1:%d/\n", port);
 
-    while (true)
+    accepting_connections = true;
+    signal(SIGINT, signal_handler);
+
+    while (accepting_connections)
     {
         client_conn = calloc(1, sizeof(server_client_t));
 
@@ -106,13 +116,25 @@ void server_serve(server_t *server, int port)
         queue_enqueue(server->connections, client_conn);
     }
 
-    // join all threads
+    // cancel all threads
+    for (i = 0; i < server->max_threads; ++i)
+    {
+        pthread_cancel(threads[i]);
+    }
+
+    // free all threads
     for (i = 0; i < server->max_threads; ++i)
     {
         pthread_join(threads[i], NULL);
     }
 
-    queue_destroy(server->connections);
+    // empty the connection queue
+    while (queue_length(server->connections))
+    {
+        client_conn = queue_dequeue(server->connections);
+        free(client_conn);
+    }
+
     close(server_fd);
 }
 
@@ -126,6 +148,8 @@ void *thread_worker(void *t_args)
 
     args = (thread_args_t *)t_args;
 
+    pthread_cleanup_push(thread_cleanup, t_args);
+
     while (true)
     {
         conn = queue_dequeue(args->server->connections);
@@ -133,5 +157,21 @@ void *thread_worker(void *t_args)
         free(conn);
     }
 
+    pthread_cleanup_pop(true);
+
     return NULL;
+}
+
+void thread_cleanup(void *args)
+{
+    // free the args if they aren't freed
+}
+
+void signal_handler(int sig)
+{
+    if (sig == SIGINT)
+    {
+        // cancel all threads
+        accepting_connections = false;
+    }
 }

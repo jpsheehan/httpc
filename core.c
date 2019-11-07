@@ -26,5 +26,7 @@ int main(int argc, char *argv[])
 
     server_serve(server, 8080);
 
+    server_destroy(server);
+
     return EXIT_SUCCESS;
 }

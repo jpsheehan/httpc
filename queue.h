@@ -25,4 +25,6 @@ void *queue_dequeue(queue_t *queue);
 
 void queue_destroy(queue_t *queue);
 
+int queue_length(queue_t *queue);
+
 #endif

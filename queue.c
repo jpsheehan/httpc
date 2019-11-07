@@ -66,3 +66,10 @@ void queue_destroy(queue_t *queue)
     free(queue->data);
     free(queue);
 }
+
+int queue_length(queue_t *queue)
+{
+    int length;
+    sem_getvalue(&queue->empty, &length);
+    return length;
+}
