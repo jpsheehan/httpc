@@ -10,8 +10,16 @@ typedef struct
     int max_threads;
     void (*connection_handler)(int, int, struct sockaddr_in);
     queue_t *connections;
-
+    int sock_fd;
 } server_t;
+
+typedef struct
+{
+    int sock_fd;
+    struct sockaddr_in addr;
+    socklen_t addr_len;
+    server_t *server;
+} server_client_t;
 
 server_t *server_init(int max_threads, void (*handler)(int, int, struct sockaddr_in));
 
