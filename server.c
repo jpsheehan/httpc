@@ -8,16 +8,9 @@
 
 #include "server.h"
 #include "list.h"
+#include "buffer.h"
 
 static void *thread_worker(void *);
-
-typedef struct
-{
-    int sock_fd;
-    struct sockaddr_in addr;
-    socklen_t addr_len;
-    server_t *server;
-} client_conn_info;
 
 typedef struct
 {
@@ -25,64 +18,15 @@ typedef struct
     server_t *server;
 } thread_args_t;
 
-typedef enum
-{
-    GET,
-    POST,
-    HEAD,
-    CONNECT,
-    OPTIONS,
-    PUT,
-    DELETE
-} http_method_t;
-
 typedef struct
 {
-    bool headers_rxd;
-    bool body_rxd;
-    bool headers_txd;
-    bool body_txd;
-    char *path;
-    http_method_t method;
-    list_t *req_headers;
-    char *req_body;
-} http_t;
+    int sock_fd;
+    struct sockaddr_in addr;
+    socklen_t addr_len;
+    server_t *server;
+} server_client_t;
 
-http_t *http_init(void)
-{
-    http_t *http = calloc(1, sizeof(http_t));
-
-    return http;
-}
-
-void http_destroy(http_t *http)
-{
-    if (http->req_headers)
-    {
-        list_destroy(http->req_headers);
-    }
-
-    if (http->req_body)
-    {
-        free(http->req_body);
-    }
-
-    free(http);
-}
-
-// void http_read_headers(client_conn_info *conn, http_t *http)
-// {
-//     int n;
-//     char buffer[128];
-
-//     while ((n = recv(conn->sock_fd, &buffer, 128, 0)) != -1)
-//     {
-//         recv()
-//     }
-// }
-
-server_t *
-server_init(int max_threads, void (*handler)(int, int, struct sockaddr_in))
+server_t *server_init(int max_threads, void (*handler)(int, int, struct sockaddr_in))
 {
     server_t *server = (server_t *)malloc(sizeof(server_t));
 
@@ -104,7 +48,7 @@ void server_destroy(server_t *server)
 
 void server_serve(server_t *server, int port)
 {
-    client_conn_info *client_conn;
+    server_client_t *client_conn;
     pthread_t threads[server->max_threads];
     thread_args_t thread_args[server->max_threads];
 
@@ -149,7 +93,7 @@ void server_serve(server_t *server, int port)
 
     while (true)
     {
-        client_conn = calloc(1, sizeof(client_conn_info));
+        client_conn = calloc(1, sizeof(server_client_t));
 
         // accept the connection
         if ((client_conn->sock_fd = accept(server_fd, (struct sockaddr *)&client_conn->addr, (socklen_t *)&client_conn->addr_len)) < 0)
@@ -177,7 +121,7 @@ void server_serve(server_t *server, int port)
  */
 void *thread_worker(void *t_args)
 {
-    client_conn_info *conn;
+    server_client_t *conn;
     thread_args_t *args;
 
     args = (thread_args_t *)t_args;

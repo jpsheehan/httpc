@@ -4,24 +4,20 @@
 #include <unistd.h>
 
 #include "server.h"
-#include "buffer.h"
+#include "http.h"
 
 void handle_connection(int thread_id, int sock_fd, struct sockaddr_in addr)
 {
-    buffer_t *buff = buffer_init(1024);
+    http_t *http;
     char temp[32] = {0};
 
-    buffer_recv(buff, sock_fd);
-    printf("%s", (char *)buff->data);
-
-    buffer_rewind(buff);
+    http = http_init(sock_fd);
+    http_read(http);
 
     snprintf(temp, 32, "Hello from thread %d\n", thread_id);
-    buffer_write(buff, temp, strlen(temp));
-    buffer_send(buff, sock_fd);
+    http_write(http, temp, strlen(temp));
 
-    close(sock_fd);
-    buffer_destroy(buff);
+    http_destroy(http);
 }
 
 int main(int argc, char *argv[])
