@@ -5,7 +5,7 @@
 
 #include "buffer.h"
 
-#define TEMP_BUFFER_SIZE 8024
+#define TEMP_BUFFER_SIZE 8192
 
 void buffer_realloc(buffer_t *buffer);
 
@@ -69,7 +69,6 @@ void buffer_write(buffer_t *buffer, char *src, size_t nbytes)
 {
     while (nbytes + buffer->used > buffer->reserved)
     {
-        printf("Realloc'ing to %lu bytes...\n", buffer->reserved * 2);
         buffer_realloc(buffer);
     }
 
