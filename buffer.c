@@ -57,7 +57,7 @@ size_t buffer_send(buffer_t *buffer, int fd)
     ssize_t n;
     size_t sent = 0;
 
-    while ((n = send(fd, &buffer->data[sent], buffer->used - sent, 0)) > 0)
+    while ((n = send(fd, &buffer->data[sent], buffer->used - sent, MSG_NOSIGNAL)) > 0)
     {
         sent += n;
     }

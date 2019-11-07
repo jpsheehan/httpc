@@ -11,20 +11,20 @@
 #include "server.h"
 #include "list.h"
 #include "buffer.h"
-
-static void *thread_worker(void *);
-
-void signal_handler(int);
-
-void thread_cleanup(void *t_args);
+#include "worker.h"
 
 static pthread_t dispatcher_thread;
 
-typedef struct
+void signal_handler(int sig)
 {
-    int thread_id;
-    server_t *server;
-} thread_args_t;
+    switch (sig)
+    {
+    case SIGINT:
+        // cancel the dispatcher thread
+        pthread_cancel(dispatcher_thread);
+        break;
+    }
+}
 
 server_t *server_init(int max_threads, void (*handler)(int, int, struct sockaddr_in))
 {
@@ -51,7 +51,7 @@ void server_serve(server_t *server, int port)
 {
     server_client_t *client_conn;
     pthread_t worker_threads[server->max_threads];
-    thread_args_t thread_args[server->max_threads];
+    thread_args_t worker_args[server->max_threads];
     dispatcher_thread_args_t dispatcher_args;
 
     int opt = 0, i;
@@ -61,8 +61,8 @@ void server_serve(server_t *server, int port)
     // start workers
     for (i = 0; i < server->max_threads; ++i)
     {
-        thread_args[i] = (thread_args_t){i, server};
-        pthread_create(&worker_threads[i], NULL, thread_worker, &thread_args[i]);
+        worker_args[i] = (thread_args_t){i, server};
+        pthread_create(&worker_threads[i], NULL, &worker_thread, &worker_args[i]);
     }
 
     // create the socket
@@ -126,42 +126,4 @@ void server_serve(server_t *server, int port)
     // close the server connection
     close(server->sock_fd);
     server->sock_fd = -1;
-}
-
-/**
- * Connection worker thread.
- */
-void *thread_worker(void *t_args)
-{
-    server_client_t *conn;
-    thread_args_t *args;
-
-    args = (thread_args_t *)t_args;
-
-    pthread_cleanup_push(thread_cleanup, t_args);
-
-    while (true)
-    {
-        conn = queue_dequeue(args->server->connections);
-        (args->server->connection_handler)(args->thread_id, conn->sock_fd, conn->addr);
-        free(conn);
-    }
-
-    pthread_cleanup_pop(true);
-
-    return NULL;
-}
-
-void thread_cleanup(void *args)
-{
-    // free the args if they aren't freed
-}
-
-void signal_handler(int sig)
-{
-    if (sig == SIGINT)
-    {
-        // cancel all threads
-        pthread_cancel(dispatcher_thread);
-    }
 }
