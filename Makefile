@@ -1,5 +1,6 @@
 CC=gcc
-CFLAGS=-g -Werror -Wall
+CFLAGS=-Werror -Wall
+DEPS=server.o queue.o list.o buffer.o http.o dispatcher.o worker.o
 
 all: core
 
@@ -8,7 +9,7 @@ clean:
 
 .PHONY: all clean
 
-core: core.c server.o queue.o list.o buffer.o http.o dispatcher.o worker.o
+core: core.c $(DEPS)
 	$(CC) $(CFLAGS) -o $@ $^ -lpthread
 
 queue.o: queue.c
