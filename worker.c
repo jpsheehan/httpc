@@ -8,16 +8,22 @@
 
 void worker_cleanup(void *t_args)
 {
+    worker_thread_args_t *args = (worker_thread_args_t *)t_args;
+
+    // print a message
+    printf("[%d] Worker thread stopped!\n", args->thread_id);
 }
 
 void *worker_thread(void *t_args)
 {
     server_client_t *conn;
-    thread_args_t *args;
+    worker_thread_args_t *args;
 
-    args = (thread_args_t *)t_args;
+    args = (worker_thread_args_t *)t_args;
 
     pthread_cleanup_push(worker_cleanup, t_args);
+
+    printf("[%d] Worker thread started!\n", args->thread_id);
 
     while (true)
     {

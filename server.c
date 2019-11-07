@@ -51,7 +51,7 @@ void server_serve(server_t *server, int port)
 {
     server_client_t *client_conn;
     pthread_t worker_threads[server->max_threads];
-    thread_args_t worker_args[server->max_threads];
+    worker_thread_args_t worker_args[server->max_threads];
     dispatcher_thread_args_t dispatcher_args;
 
     int opt = 0, i;
@@ -61,7 +61,7 @@ void server_serve(server_t *server, int port)
     // start workers
     for (i = 0; i < server->max_threads; ++i)
     {
-        worker_args[i] = (thread_args_t){i, server};
+        worker_args[i] = (worker_thread_args_t){i, server};
         pthread_create(&worker_threads[i], NULL, &worker_thread, &worker_args[i]);
     }
 

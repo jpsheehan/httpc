@@ -16,6 +16,8 @@ void dispatcher_thread_cleanup(void *t_args)
         free(client_conn);
         client_conn = NULL;
     }
+
+    printf("Dispatcher thread stopped!\n");
 }
 
 void *dispatcher_thread_worker(void *t_args)
@@ -23,6 +25,8 @@ void *dispatcher_thread_worker(void *t_args)
     dispatcher_thread_args_t *args = (dispatcher_thread_args_t *)t_args;
 
     pthread_cleanup_push(dispatcher_thread_cleanup, t_args);
+
+    printf("Dispatcher thread started!\n");
 
     while (true)
     {

@@ -7,7 +7,7 @@ typedef struct
 {
     int thread_id;
     server_t *server;
-} thread_args_t;
+} worker_thread_args_t;
 
 void *worker_thread(void *t_args);
 
