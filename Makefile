@@ -8,7 +8,7 @@ clean:
 
 .PHONY: all clean
 
-core: core.c *.o
+core: core.c server.o queue.o list.o buffer.o
 	$(CC) $(CFLAGS) -o $@ $^ -lpthread
 
 queue.o: queue.c
@@ -18,6 +18,9 @@ server.o: server.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 list.o: list.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+buffer.o: buffer.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 	
