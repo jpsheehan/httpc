@@ -16,9 +16,9 @@ void dispatcher_thread_cleanup(void *t_args)
     dispatcher_thread_args_t *args = (dispatcher_thread_args_t *)t_args;
 
     // free any connections that weren't on the queue
-    if (args->__client_conn)
+    if (args->__conn)
     {
-        free(args->__client_conn);
+        free(args->__conn);
     }
 
     // close the server socket
@@ -48,19 +48,20 @@ void *dispatcher_thread_worker(void *t_args)
     while (true)
     {
         // allocate space for the client connection
-        args->__client_conn = calloc(1, sizeof(server_client_t));
+        args->__conn = calloc(1, sizeof(connection_t));
 
         // attempt to accept the connection
-        if ((args->__client_conn->sock_fd = accept(args->sock_fd, (struct sockaddr *)&args->__client_conn->addr, (socklen_t *)&args->__client_conn->addr_len)) < 0)
+        if ((args->__conn->sock_fd = accept(args->sock_fd, (struct sockaddr *)&args->__conn->addr, (socklen_t *)&args->__conn->addr_len)) < 0)
         {
             perror("accept failed");
-            free(args->__client_conn);
+            free(args->__conn);
+            args->__conn = NULL;
             continue;
         };
 
         // enqueue the connection
-        queue_enqueue(args->connection_queue, args->__client_conn);
-        args->__client_conn = NULL;
+        queue_enqueue(args->connection_queue, args->__conn);
+        args->__conn = NULL;
     }
 
     pthread_cleanup_pop(true);

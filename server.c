@@ -14,6 +14,7 @@
 #include "worker.h"
 #include "config.h"
 #include "network.h"
+#include "connection.h"
 
 static pthread_t *dispatcher_threads;
 
@@ -39,7 +40,7 @@ server_t *server_init(void (*handler)(int, int, struct sockaddr_in))
     if (server)
     {
         server->connection_handler = handler;
-        server->connections = queue_init(CONFIG_CONNECTION_QUEUE_SIZE);
+        server->connection_queue = queue_init(CONFIG_CONNECTION_QUEUE_SIZE);
     }
 
     return server;
@@ -47,13 +48,13 @@ server_t *server_init(void (*handler)(int, int, struct sockaddr_in))
 
 void server_destroy(server_t *server)
 {
-    queue_destroy(server->connections);
+    queue_destroy(server->connection_queue);
     free(server);
 }
 
 void server_serve(server_t *server, int port)
 {
-    server_client_t *client_conn;
+    connection_t *client_conn;
     pthread_t worker_threads[CONFIG_NUM_WORKER_THREADS];
     worker_thread_args_t worker_args[CONFIG_NUM_WORKER_THREADS];
     dispatcher_thread_args_t dispatcher_args[CONFIG_NUM_DISPATCHER_THREADS];
@@ -71,7 +72,7 @@ void server_serve(server_t *server, int port)
     dispatcher_threads = calloc(CONFIG_NUM_DISPATCHER_THREADS, sizeof(pthread_t));
     for (i = 0; i < CONFIG_NUM_DISPATCHER_THREADS; ++i)
     {
-        dispatcher_args[i] = (dispatcher_thread_args_t){i, port + i, server->connections};
+        dispatcher_args[i] = (dispatcher_thread_args_t){i, port + i, server->connection_queue};
         pthread_create(&dispatcher_threads[i], NULL, &dispatcher_thread_worker, &dispatcher_args[i]);
     }
 
@@ -100,9 +101,9 @@ void server_serve(server_t *server, int port)
     }
 
     // empty the connection queue
-    while (queue_length(server->connections))
+    while (queue_length(server->connection_queue))
     {
-        client_conn = queue_dequeue(server->connections);
+        client_conn = queue_dequeue(server->connection_queue);
         free(client_conn);
     }
 }

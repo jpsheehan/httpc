@@ -5,6 +5,7 @@
 
 #include "worker.h"
 #include "queue.h"
+#include "connection.h"
 
 void worker_cleanup(void *t_args)
 {
@@ -16,7 +17,7 @@ void worker_cleanup(void *t_args)
 
 void *worker_thread(void *t_args)
 {
-    server_client_t *conn;
+    connection_t *conn;
     worker_thread_args_t *args;
 
     args = (worker_thread_args_t *)t_args;
@@ -27,7 +28,7 @@ void *worker_thread(void *t_args)
 
     while (true)
     {
-        conn = queue_dequeue(args->server->connections);
+        conn = queue_dequeue(args->server->connection_queue);
         (args->server->connection_handler)(args->thread_id, conn->sock_fd, conn->addr);
         free(conn);
     }

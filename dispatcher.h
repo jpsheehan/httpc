@@ -1,7 +1,7 @@
 #ifndef DISPATCHER_H_
 #define DISPATCHER_H_
 
-#include "server.h"
+#include "connection.h"
 #include "queue.h"
 
 typedef struct
@@ -31,7 +31,7 @@ typedef struct
      * Temporary buffer for storing the client connection.
      * NOTE: Don't use this for anything outside of dispatcher.c.
      */
-    server_client_t *__client_conn;
+    connection_t *__conn;
 
 } dispatcher_thread_args_t;
 
