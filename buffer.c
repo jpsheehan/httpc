@@ -44,7 +44,7 @@ size_t buffer_recv(buffer_t *buffer, int fd)
     size_t start_used = buffer->used;
     char temp[TEMP_BUFFER_SIZE];
 
-    while ((n = recv(fd, temp, TEMP_BUFFER_SIZE, 0)) == -1)
+    while ((n = recv(fd, temp, TEMP_BUFFER_SIZE, MSG_DONTWAIT)) > 0)
     {
         buffer_write(buffer, temp, n);
     }
