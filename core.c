@@ -55,7 +55,15 @@ void log_connection(FILE *file, http_t *http)
 
     host = stringmap_get(http->headers->headers, "Host");
 
-    fprintf(file, "%s %s %s %s\n", time_str, method_str, host, http->headers->path);
+    if (host != NULL)
+    {
+
+        fprintf(file, "%s %s %s %s\n", time_str, method_str, host, http->headers->path);
+    }
+    else
+    {
+        fprintf(file, "FAILED REQUEST: %lu/%lu bytes read\n%s", http->req->used, http->req->reserved, http->req->data);
+    }
 }
 
 void handle_connection(connection_t *conn)
@@ -66,10 +74,13 @@ void handle_connection(connection_t *conn)
     http = http_init(conn->sock_fd);
     http_read(http);
 
-    log_connection(stdout, http);
+    if (http->headers)
+    {
+        log_connection(stdout, http);
 
-    snprintf(temp, 64, "Port: %d\nDispatcher thread id: %d\nWorker thread id: %d", conn->port, conn->dispatcher_thread_id, conn->worker_thread_id);
-    http_write(http, temp, strlen(temp));
+        snprintf(temp, 64, "Port: %d\nDispatcher thread id: %d\nWorker thread id: %d", conn->port, conn->dispatcher_thread_id, conn->worker_thread_id);
+        http_write(http, temp, strlen(temp));
+    }
 
     http_destroy(http);
 }

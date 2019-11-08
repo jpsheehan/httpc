@@ -45,7 +45,10 @@ void http_destroy(http_t *http)
     buffer_destroy(http->req);
     buffer_destroy(http->res);
 
-    http_headers_destroy(http->headers);
+    if (http->headers)
+    {
+        http_headers_destroy(http->headers);
+    }
 
     free(http);
 }
@@ -53,7 +56,11 @@ void http_destroy(http_t *http)
 void http_read(http_t *http)
 {
     buffer_recv(http->req, http->conn_fd);
-    http->headers = http_headers_init(http->req->data);
+
+    if (http->req->used)
+    {
+        http->headers = http_headers_init(http->req->data);
+    }
 }
 
 void http_write(http_t *http, char *src, size_t nbytes)
