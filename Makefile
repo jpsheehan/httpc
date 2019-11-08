@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Werror -Wall -Wextra
 DEBUG_CFLAGS=-g $(CFLAGS)
-DEPS=server.o queue.o list.o buffer.o http.o dispatcher.o worker.o network.o
+DEPS=server.o queue.o list.o buffer.o http.o dispatcher.o worker.o network.o http_headers.o
 
 all: core
 
@@ -38,6 +38,9 @@ worker.o: worker.c
 	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
 
 network.o: network.c
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
+
+http_headers.o: http_headers.c
 	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
 
 	

@@ -16,6 +16,8 @@ void handle_connection(connection_t *conn)
     http = http_init(conn->sock_fd);
     http_read(http);
 
+    printf("Path: %s, Version: %s\n", http->headers->path, http->headers->version);
+
     snprintf(temp, 64, "Port: %d\nDispatcher thread id: %d\nWorker thread id: %d", conn->port, conn->dispatcher_thread_id, conn->worker_thread_id);
     http_write(http, temp, strlen(temp));
 

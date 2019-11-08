@@ -4,27 +4,14 @@
 #include "buffer.h"
 #include "server.h"
 #include "list.h"
-
-typedef enum
-{
-    GET,
-    POST,
-    HEAD,
-    CONNECT,
-    OPTIONS,
-    PUT,
-    DELETE
-} http_method_t;
+#include "http_headers.h"
 
 typedef struct
 {
     int conn_fd;
     buffer_t *req;
     buffer_t *res;
-    char *path;
-    http_method_t method;
-    list_t *req_headers;
-    char *req_body;
+    http_headers_t *headers;
 } http_t;
 
 http_t *http_init(int conn_fd);
