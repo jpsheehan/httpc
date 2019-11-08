@@ -1,13 +1,12 @@
 #ifndef HTTP_HEADER_H_
 #define HTTP_HEADER_H_
 
-#include "list.h"
 #include "http_method.h"
+#include "stringmap.h"
 
 typedef struct
 {
-    list_t *keys;
-    list_t *values;
+    stringmap_t *headers;
     http_method_t method;
     char *path;
     char *version;

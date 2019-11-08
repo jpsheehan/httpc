@@ -51,7 +51,11 @@ void log_connection(FILE *file, http_t *http)
         break;
     }
 
-    fprintf(file, "%s %s %s\n", time_str, method_str, http->headers->path);
+    char *host;
+
+    host = stringmap_get(http->headers->headers, "Host");
+
+    fprintf(file, "%s %s %s %s\n", time_str, method_str, host, http->headers->path);
 }
 
 void handle_connection(connection_t *conn)

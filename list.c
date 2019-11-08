@@ -31,15 +31,18 @@ void list_destroy(list_t *list)
 void list_destroy_all(list_t *list)
 {
     list_t *next;
-    while (list->next)
+    if (list)
     {
-        next = list->next;
+        while (list->next)
+        {
+            next = list->next;
+            free(list->data);
+            free(list);
+            list = next;
+        }
         free(list->data);
         free(list);
-        list = next;
     }
-    free(list->data);
-    free(list);
 }
 
 void list_push(list_t *list, void *data)

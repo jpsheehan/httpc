@@ -90,15 +90,6 @@ void http_headers_parse(http_headers_t *headers, char *buffer)
                     key = calloc(key_len + 1, sizeof(char));
                     strncpy(key, buffer, key_len);
 
-                    if (headers->keys)
-                    {
-                        list_push(headers->keys, key);
-                    }
-                    else
-                    {
-                        headers->keys = list_init(key);
-                    }
-
                     // restore the colon character
                     *eow = ':';
 
@@ -110,16 +101,12 @@ void http_headers_parse(http_headers_t *headers, char *buffer)
                     val = calloc(val_len + 1, sizeof(char));
                     strncpy(val, buffer, val_len);
 
-                    if (headers->values)
-                    {
-                        list_push(headers->values, val);
-                    }
-                    else
-                    {
-                        headers->values = list_init(val);
-                    }
-
                     *eow = '\r'; // restore line feed
+
+                    stringmap_put(headers->headers, key, val);
+
+                    free(key);
+                    free(val);
                 }
 
                 buffer = eol + 2;
@@ -143,6 +130,7 @@ http_headers_t *http_headers_init(char *buffer)
 
     if (headers)
     {
+        headers->headers = stringmap_init();
         http_headers_parse(headers, buffer);
     }
 
@@ -151,8 +139,7 @@ http_headers_t *http_headers_init(char *buffer)
 
 void http_headers_destroy(http_headers_t *headers)
 {
-    list_destroy_all(headers->keys);
-    list_destroy_all(headers->values);
+    stringmap_destroy(headers->headers);
     free(headers->version);
     free(headers->path);
     free(headers);
