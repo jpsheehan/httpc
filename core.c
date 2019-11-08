@@ -24,11 +24,38 @@ void handle_connection(connection_t *conn)
 
 int main(int argc, char *argv[])
 {
-    server_t *server = server_init(handle_connection);
+    int *ports, i;
+    size_t num_ports;
+    server_t *server;
 
-    server_serve(server, PORT);
+    if (argc < 2)
+    {
+        printf("usage: %s port1 port2 ... portN\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+    else
+    {
+        num_ports = argc - 1;
+        ports = calloc(num_ports, sizeof(int));
 
-    server_destroy(server);
+        for (i = 0; i < num_ports; ++i)
+        {
+            ports[i] = atoi(argv[i + 1]);
+            if (ports[i] < 1 || ports[i] > 65535)
+            {
+                fprintf(stderr, "error: '%s' does not appear to be a valid port\n", argv[i + 1]);
 
-    return EXIT_SUCCESS;
+                free(ports);
+                return EXIT_FAILURE;
+            }
+        }
+
+        server = server_init(handle_connection);
+        server_serve(server, ports, num_ports);
+
+        server_destroy(server);
+        free(ports);
+
+        return EXIT_SUCCESS;
+    }
 }

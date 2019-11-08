@@ -52,12 +52,12 @@ void server_destroy(server_t *server)
     free(server);
 }
 
-void server_serve(server_t *server, int port)
+void server_serve(server_t *server, int ports[], size_t num_ports)
 {
     connection_t *client_conn;
     pthread_t worker_threads[CONFIG_NUM_WORKER_THREADS];
     worker_thread_args_t worker_args[CONFIG_NUM_WORKER_THREADS];
-    dispatcher_thread_args_t dispatcher_args[CONFIG_NUM_DISPATCHER_THREADS];
+    dispatcher_thread_args_t dispatcher_args[num_ports];
 
     int i;
 
@@ -69,15 +69,14 @@ void server_serve(server_t *server, int port)
     }
 
     // start dispatchers
-    dispatcher_threads = calloc(CONFIG_NUM_DISPATCHER_THREADS, sizeof(pthread_t));
-    for (i = 0; i < CONFIG_NUM_DISPATCHER_THREADS; ++i)
+    dispatcher_threads = calloc(num_ports, sizeof(pthread_t));
+    for (i = 0; i < num_ports; ++i)
     {
-        dispatcher_args[i] = (dispatcher_thread_args_t){i, port + i, server->connection_queue};
+        dispatcher_args[i] = (dispatcher_thread_args_t){i, ports[i], server->connection_queue};
         pthread_create(&dispatcher_threads[i], NULL, &dispatcher_thread_worker, &dispatcher_args[i]);
     }
 
-    // print a nice message and set the SIGINT handler
-    printf("Listening on http://127.0.0.1:%d/\n", port);
+    // set the SIGINT handler
     signal(SIGINT, signal_handler);
 
     // wait for dispatchers to be cancelled (as a result of SIGINT, etc)
