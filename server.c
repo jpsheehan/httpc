@@ -13,6 +13,7 @@
 #include "buffer.h"
 #include "worker.h"
 #include "config.h"
+#include "logger.h"
 #include "connection.h"
 
 static pthread_t *dispatcher_threads;
@@ -33,7 +34,7 @@ void signal_handler(int sig)
     }
 }
 
-server_t *server_init(void (*handler)(connection_t *))
+server_t *server_init(void (*handler)(connection_t *, server_t *))
 {
     server_t *server = (server_t *)malloc(sizeof(server_t));
 
@@ -41,6 +42,7 @@ server_t *server_init(void (*handler)(connection_t *))
     {
         server->connection_handler = handler;
         server->connection_queue = queue_init(CONFIG_CONNECTION_QUEUE_SIZE);
+        server->logger_queue = queue_init(CONFIG_LOGGER_QUEUE_SIZE);
     }
 
     return server;
@@ -48,6 +50,7 @@ server_t *server_init(void (*handler)(connection_t *))
 
 void server_destroy(server_t *server)
 {
+    queue_destroy(server->logger_queue);
     queue_destroy(server->connection_queue);
     free(server);
 }
@@ -55,11 +58,16 @@ void server_destroy(server_t *server)
 void server_serve(server_t *server, uint16_t ports[], uint8_t num_ports)
 {
     connection_t *client_conn;
-    pthread_t worker_threads[CONFIG_NUM_WORKER_THREADS];
+    pthread_t worker_threads[CONFIG_NUM_WORKER_THREADS], logger_threads;
     worker_thread_args_t worker_args[CONFIG_NUM_WORKER_THREADS];
     dispatcher_thread_args_t dispatcher_args[num_ports];
+    logger_thread_args_t logger_args;
 
     uint8_t i;
+
+    // start the logging thread
+    logger_args = (logger_thread_args_t){server->logger_queue, stdout};
+    pthread_create(&logger_threads, NULL, &logger_thread, &logger_args);
 
     // start workers
     for (i = 0; i < CONFIG_NUM_WORKER_THREADS; ++i)
@@ -73,7 +81,7 @@ void server_serve(server_t *server, uint16_t ports[], uint8_t num_ports)
     dispatcher_threads = calloc(num_dispatcher_threads, sizeof(pthread_t));
     for (i = 0; i < num_dispatcher_threads; ++i)
     {
-        dispatcher_args[i] = (dispatcher_thread_args_t){i, ports[i], server->connection_queue, -1, NULL};
+        dispatcher_args[i] = (dispatcher_thread_args_t){i, ports[i], server->connection_queue, server->logger_queue, -1, NULL};
         pthread_create(&dispatcher_threads[i], NULL, &dispatcher_thread_worker, &dispatcher_args[i]);
     }
 
@@ -106,4 +114,8 @@ void server_serve(server_t *server, uint16_t ports[], uint8_t num_ports)
         client_conn = queue_dequeue(server->connection_queue);
         free(client_conn);
     }
+
+    // cancel and free the logging thread
+    pthread_cancel(logger_threads);
+    pthread_join(logger_threads, NULL);
 }

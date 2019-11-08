@@ -7,6 +7,7 @@
 #include "dispatcher.h"
 #include "queue.h"
 #include "network.h"
+#include "logger.h"
 
 /**
  * Called automatically when the thread is cancelled/exited.
@@ -25,11 +26,12 @@ void dispatcher_thread_cleanup(void *t_args)
     close(args->sock_fd);
 
     // print a nice message
-    printf("[%d] Dispatcher thread stopped!\n", args->thread_id);
+    logger_info(args->logger_queue, LOG_SRC_DISPATCH, args->thread_id, "Dispatcher thread stopped");
 }
 
 void *dispatcher_thread_worker(void *t_args)
 {
+    char buffer[64] = {0};
     dispatcher_thread_args_t *args = (dispatcher_thread_args_t *)t_args;
 
     // add the cleanup handler
@@ -38,12 +40,15 @@ void *dispatcher_thread_worker(void *t_args)
     // attempt to create the socket, exiting upon failure
     if ((args->sock_fd = network_get_socket(args->port)) < 0)
     {
-        perror("Couldn't open socket :(");
+        snprintf(buffer, 64, "Dispatcher couldn't open port %d", args->port);
+        logger_err(args->logger_queue, LOG_SRC_DISPATCH, args->thread_id, buffer);
         pthread_exit(NULL);
     }
 
+    snprintf(buffer, 64, "Dispatcher thread listening on port %d", args->port);
+
     // print a nice message
-    printf("[%d] Dispatcher listening on http://localhost:%d/\n", args->thread_id, args->port);
+    logger_info(args->logger_queue, LOG_SRC_DISPATCH, args->thread_id, buffer);
 
     while (true)
     {

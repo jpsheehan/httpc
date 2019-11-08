@@ -6,13 +6,16 @@
 #include "queue.h"
 #include "connection.h"
 
-typedef struct
+struct server_s
 {
-    void (*connection_handler)(connection_t *);
+    void (*connection_handler)(connection_t *, struct server_s *);
     queue_t *connection_queue;
-} server_t;
+    queue_t *logger_queue;
+};
 
-server_t *server_init(void (*handler)(connection_t *));
+typedef struct server_s server_t;
+
+server_t *server_init(void (*handler)(connection_t *, server_t *));
 
 void server_destroy(server_t *server);
 

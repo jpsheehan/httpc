@@ -6,6 +6,7 @@
 #include "worker.h"
 #include "queue.h"
 #include "connection.h"
+#include "logger.h"
 
 void worker_cleanup(void *t_args)
 {
@@ -14,7 +15,7 @@ void worker_cleanup(void *t_args)
     // TODO: Might need to free that active connection?
 
     // print a message
-    printf("[%d] Worker thread stopped!\n", args->thread_id);
+    logger_info(args->server->logger_queue, LOG_SRC_WORKER, args->thread_id, "Worker thread stopped");
 }
 
 void *worker_thread(void *t_args)
@@ -26,7 +27,7 @@ void *worker_thread(void *t_args)
 
     pthread_cleanup_push(worker_cleanup, t_args);
 
-    printf("[%d] Worker thread started!\n", args->thread_id);
+    logger_info(args->server->logger_queue, LOG_SRC_WORKER, args->thread_id, "Worker thread started");
 
     while (true)
     {
@@ -37,7 +38,7 @@ void *worker_thread(void *t_args)
         conn->worker_thread_id = args->thread_id;
 
         // call the connection handler
-        (args->server->connection_handler)(conn);
+        (args->server->connection_handler)(conn, args->server);
 
         // free the connection
         free(conn);

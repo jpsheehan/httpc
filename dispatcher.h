@@ -23,6 +23,11 @@ typedef struct
     queue_t *connection_queue;
 
     /**
+     * The pointer to the global logger queue.
+     */
+    queue_t *logger_queue;
+
+    /**
      * The socket file descriptor of the server.
      */
     int sock_fd;

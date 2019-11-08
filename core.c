@@ -1,27 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #include "server.h"
 #include "http.h"
 #include "connection.h"
 #include "list.h"
+#include "logger.h"
 
 #define PORT 8080
 
-void log_connection(FILE *file, http_t *http)
+void log_connection(connection_t *conn, http_t *http, server_t *srv)
 {
-    time_t t;
-    struct tm *temp;
-    char time_str[32] = {0};
-
-    t = time(NULL);
-    temp = localtime(&t);
-
-    strftime(time_str, sizeof(time_str), "%F %H:%M:%S", temp);
 
     char *method_str;
+    char buffer[256] = {0};
 
     switch (http->headers->method)
     {
@@ -57,16 +50,12 @@ void log_connection(FILE *file, http_t *http)
 
     if (host != NULL)
     {
-
-        fprintf(file, "%s %s %s %s\n", time_str, method_str, host, http->headers->path);
-    }
-    else
-    {
-        fprintf(file, "FAILED REQUEST: %lu/%lu bytes read\n%s", http->req->used, http->req->reserved, http->req->data);
+        snprintf(buffer, 256, "%s %s %s", method_str, host, http->headers->path);
+        logger_info(srv->logger_queue, LOG_SRC_WORKER, conn->worker_thread_id, buffer);
     }
 }
 
-void handle_connection(connection_t *conn)
+void handle_connection(connection_t *conn, server_t *srv)
 {
     http_t *http;
     char temp[64] = {0};
@@ -76,7 +65,7 @@ void handle_connection(connection_t *conn)
 
     if (http->headers)
     {
-        log_connection(stdout, http);
+        log_connection(conn, http, srv);
 
         snprintf(temp, 64, "Port: %d\nDispatcher thread id: %d\nWorker thread id: %d", conn->port, conn->dispatcher_thread_id, conn->worker_thread_id);
         http_write(http, temp, strlen(temp));
