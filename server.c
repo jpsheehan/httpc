@@ -13,6 +13,7 @@
 #include "buffer.h"
 #include "worker.h"
 #include "config.h"
+#include "network.h"
 
 static pthread_t *dispatcher_threads;
 
@@ -58,9 +59,13 @@ void server_serve(server_t *server, int port)
     worker_thread_args_t worker_args[CONFIG_NUM_WORKER_THREADS];
     dispatcher_thread_args_t dispatcher_args[CONFIG_NUM_DISPATCHER_THREADS];
 
-    int opt = 0, i;
-    struct sockaddr_in address;
-    int address_len = sizeof(address);
+    int i;
+
+    if ((server->sock_fd = network_get_socket(port)) < 0)
+    {
+        perror("Could not open socket.");
+        exit(EXIT_FAILURE);
+    }
 
     // start workers
     for (i = 0; i < CONFIG_NUM_WORKER_THREADS; ++i)
@@ -68,34 +73,6 @@ void server_serve(server_t *server, int port)
         worker_args[i] = (worker_thread_args_t){i, server};
         pthread_create(&worker_threads[i], NULL, &worker_thread, &worker_args[i]);
     }
-
-    // create the socket
-    if ((server->sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // set socket options
-    if (setsockopt(server->sock_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
-    {
-        perror("setsockopt failed");
-        exit(EXIT_FAILURE);
-    }
-
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(port);
-
-    // bind the socket
-    if (bind(server->sock_fd, (struct sockaddr *)&address, address_len) < 0)
-    {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // listen on the socket
-    listen(server->sock_fd, port);
 
     // start dispatchers
     dispatcher_threads = calloc(CONFIG_NUM_DISPATCHER_THREADS, sizeof(pthread_t));

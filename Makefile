@@ -1,6 +1,7 @@
 CC=gcc
-CFLAGS=-g -Werror -Wall
-DEPS=server.o queue.o list.o buffer.o http.o dispatcher.o worker.o
+CFLAGS=-Werror -Wall
+DEBUG_CFLAGS=-g $(CFLAGS)
+DEPS=server.o queue.o list.o buffer.o http.o dispatcher.o worker.o network.o
 
 all: core
 
@@ -10,27 +11,30 @@ clean:
 .PHONY: all clean
 
 core: core.c $(DEPS)
-	$(CC) $(CFLAGS) -o $@ $^ -lpthread
+	$(CC) $(DEBUG_CFLAGS) -o $@ $^ -lpthread
 
 queue.o: queue.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
 
 server.o: server.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
 
 list.o: list.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
 
 buffer.o: buffer.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
 
 http.o: http.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
 
 dispatcher.o: dispatcher.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
 
 worker.o: worker.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
+
+network.o: network.c
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $^
 
 	
