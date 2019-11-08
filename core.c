@@ -24,8 +24,9 @@ void handle_connection(connection_t *conn)
 
 int main(int argc, char *argv[])
 {
-    int *ports, i;
-    size_t num_ports;
+    int temp_port;
+    uint16_t *ports;
+    size_t i, num_ports;
     server_t *server;
 
     if (argc < 2)
@@ -36,17 +37,21 @@ int main(int argc, char *argv[])
     else
     {
         num_ports = argc - 1;
-        ports = calloc(num_ports, sizeof(int));
+        ports = calloc(num_ports, sizeof(uint16_t));
 
         for (i = 0; i < num_ports; ++i)
         {
-            ports[i] = atoi(argv[i + 1]);
-            if (ports[i] < 1 || ports[i] > 65535)
+            temp_port = atoi(argv[i + 1]);
+            if (temp_port < 1 || temp_port > 65535)
             {
                 fprintf(stderr, "error: '%s' does not appear to be a valid port\n", argv[i + 1]);
 
                 free(ports);
                 return EXIT_FAILURE;
+            }
+            else
+            {
+                ports[i] = (uint16_t)temp_port;
             }
         }
 

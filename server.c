@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
+#include <stdint.h>
 
 #include "dispatcher.h"
 #include "server.h"
@@ -15,11 +16,11 @@
 #include "connection.h"
 
 static pthread_t *dispatcher_threads;
-static size_t num_dispatcher_threads;
+static uint8_t num_dispatcher_threads;
 
 void signal_handler(int sig)
 {
-    int i;
+    uint8_t i;
     switch (sig)
     {
     case SIGINT:
@@ -51,14 +52,14 @@ void server_destroy(server_t *server)
     free(server);
 }
 
-void server_serve(server_t *server, int ports[], size_t num_ports)
+void server_serve(server_t *server, uint16_t ports[], uint8_t num_ports)
 {
     connection_t *client_conn;
     pthread_t worker_threads[CONFIG_NUM_WORKER_THREADS];
     worker_thread_args_t worker_args[CONFIG_NUM_WORKER_THREADS];
     dispatcher_thread_args_t dispatcher_args[num_ports];
 
-    int i;
+    uint8_t i;
 
     // start workers
     for (i = 0; i < CONFIG_NUM_WORKER_THREADS; ++i)
@@ -72,7 +73,7 @@ void server_serve(server_t *server, int ports[], size_t num_ports)
     dispatcher_threads = calloc(num_dispatcher_threads, sizeof(pthread_t));
     for (i = 0; i < num_dispatcher_threads; ++i)
     {
-        dispatcher_args[i] = (dispatcher_thread_args_t){i, ports[i], server->connection_queue};
+        dispatcher_args[i] = (dispatcher_thread_args_t){i, ports[i], server->connection_queue, -1, NULL};
         pthread_create(&dispatcher_threads[i], NULL, &dispatcher_thread_worker, &dispatcher_args[i]);
     }
 

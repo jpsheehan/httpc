@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Werror -Wall
+CFLAGS=-Werror -Wall -Wextra
 DEBUG_CFLAGS=-g $(CFLAGS)
 DEPS=server.o queue.o list.o buffer.o http.o dispatcher.o worker.o network.o
 

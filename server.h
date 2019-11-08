@@ -16,6 +16,6 @@ server_t *server_init(void (*handler)(connection_t *));
 
 void server_destroy(server_t *server);
 
-void server_serve(server_t *server, int port[], size_t num_ports);
+void server_serve(server_t *server, uint16_t port[], uint8_t num_ports);
 
 #endif
