@@ -9,14 +9,13 @@
 
 #include "dispatcher.h"
 #include "server.h"
-#include "list.h"
 #include "buffer.h"
 #include "worker.h"
 #include "config.h"
-#include "network.h"
 #include "connection.h"
 
 static pthread_t *dispatcher_threads;
+static size_t num_dispatcher_threads;
 
 void signal_handler(int sig)
 {
@@ -25,7 +24,7 @@ void signal_handler(int sig)
     {
     case SIGINT:
         // cancel the dispatcher threads
-        for (i = 0; i < CONFIG_NUM_DISPATCHER_THREADS; ++i)
+        for (i = 0; i < num_dispatcher_threads; ++i)
         {
             pthread_cancel(dispatcher_threads[i]);
         }
@@ -69,8 +68,9 @@ void server_serve(server_t *server, int ports[], size_t num_ports)
     }
 
     // start dispatchers
-    dispatcher_threads = calloc(num_ports, sizeof(pthread_t));
-    for (i = 0; i < num_ports; ++i)
+    num_dispatcher_threads = num_ports;
+    dispatcher_threads = calloc(num_dispatcher_threads, sizeof(pthread_t));
+    for (i = 0; i < num_dispatcher_threads; ++i)
     {
         dispatcher_args[i] = (dispatcher_thread_args_t){i, ports[i], server->connection_queue};
         pthread_create(&dispatcher_threads[i], NULL, &dispatcher_thread_worker, &dispatcher_args[i]);
@@ -80,7 +80,7 @@ void server_serve(server_t *server, int ports[], size_t num_ports)
     signal(SIGINT, signal_handler);
 
     // wait for dispatchers to be cancelled (as a result of SIGINT, etc)
-    for (i = 0; i < CONFIG_NUM_DISPATCHER_THREADS; ++i)
+    for (i = 0; i < num_dispatcher_threads; ++i)
     {
         pthread_join(dispatcher_threads[i], NULL);
     }
