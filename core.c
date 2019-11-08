@@ -5,6 +5,7 @@
 #include "server.h"
 #include "http.h"
 #include "connection.h"
+#include "list.h"
 
 #define PORT 8080
 
@@ -17,6 +18,16 @@ void handle_connection(connection_t *conn)
     http_read(http);
 
     printf("Path: %s, Version: %s\n", http->headers->path, http->headers->version);
+
+    list_t *k = http->headers->keys;
+    list_t *v = http->headers->values;
+
+    while (k)
+    {
+        printf("%s=%s\n", (char *)k->data, (char *)v->data);
+        k = k->next;
+        v = v->next;
+    }
 
     snprintf(temp, 64, "Port: %d\nDispatcher thread id: %d\nWorker thread id: %d", conn->port, conn->dispatcher_thread_id, conn->worker_thread_id);
     http_write(http, temp, strlen(temp));

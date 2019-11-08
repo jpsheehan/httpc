@@ -51,7 +51,8 @@ http_method_t get_method(char *buffer, size_t n)
 
 void http_headers_parse(http_headers_t *headers, char *buffer)
 {
-    char *eow;
+    char *eow, *eol, *key, *val;
+    size_t key_len, val_len;
 
     // find the end of the first word (our method)
     eow = strchr(buffer, ' ');
@@ -73,6 +74,57 @@ void http_headers_parse(http_headers_t *headers, char *buffer)
 
             headers->version = calloc(1, eow - buffer + 1);
             strncpy(headers->version, buffer, eow - buffer);
+
+            buffer = eow + 2;
+            eol = strstr(buffer, "\r\n");
+            while (eol != NULL && buffer != eol)
+            {
+                eow = strchr(buffer, ':');
+
+                if (eow)
+                {
+                    // seperate the key and value
+                    *eow = '\0';
+
+                    key_len = strlen(buffer);
+                    key = calloc(key_len + 1, sizeof(char));
+                    strncpy(key, buffer, key_len);
+
+                    if (headers->keys)
+                    {
+                        list_push(headers->keys, key);
+                    }
+                    else
+                    {
+                        headers->keys = list_init(key);
+                    }
+
+                    // restore the colon character
+                    *eow = ':';
+
+                    buffer = eow + 1 + 1; // advance past the colon and space
+                    eow = eol;
+                    *eow = '\0';
+
+                    val_len = strlen(buffer);
+                    val = calloc(val_len + 1, sizeof(char));
+                    strncpy(val, buffer, val_len);
+
+                    if (headers->values)
+                    {
+                        list_push(headers->values, val);
+                    }
+                    else
+                    {
+                        headers->values = list_init(val);
+                    }
+
+                    *eow = '\r'; // restore line feed
+                }
+
+                buffer = eol + 2;
+                eol = strstr(buffer, "\r\n");
+            }
         }
         else
         {
@@ -99,6 +151,8 @@ http_headers_t *http_headers_init(char *buffer)
 
 void http_headers_destroy(http_headers_t *headers)
 {
+    list_destroy_all(headers->keys);
+    list_destroy_all(headers->values);
     free(headers->version);
     free(headers->path);
     free(headers);
