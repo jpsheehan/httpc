@@ -53,7 +53,7 @@ void *dispatcher_thread_worker(void *t_args)
         // attempt to accept the connection
         if ((args->__conn->sock_fd = accept(args->sock_fd, (struct sockaddr *)&args->__conn->addr, (socklen_t *)&args->__conn->addr_len)) < 0)
         {
-            perror("accept failed");
+            fprintf(stderr, "Failed to accept connection on thread %d (port %d)\n", args->thread_id, args->port);
             free(args->__conn);
             args->__conn = NULL;
             continue;
