@@ -110,19 +110,6 @@ void *logger_thread(void *t_args)
     return NULL;
 }
 
-// void logger_empty(queue_t *logger_queue)
-// {
-//     log_msg_t *msg;
-
-//     while (queue_length(logger_queue))
-//     {
-//         msg = queue_dequeue(logger_queue);
-
-//         free(msg->text);
-//         free(msg);
-//     }
-// }
-
 void logger_enqueue(queue_t *logger_queue, log_level_t level, log_source_t source, int thread_id, const char *text)
 {
     log_msg_t *msg = calloc(1, sizeof(log_msg_t));

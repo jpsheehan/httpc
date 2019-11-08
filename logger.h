@@ -29,9 +29,16 @@ typedef enum
 
 void *logger_thread(void *t_args);
 
+/**
+ * Add a log message to the queue.
+ * 
+ * @param logger_queue The pointer to the global logger queue.
+ * @param level The log level to use.
+ * @param source Where the source of the message is.
+ * @param thread_id The id of the originating thread (if applicable).
+ * @param text The actual information to write out.
+ */
 void logger_enqueue(queue_t *logger_queue, log_level_t level, log_source_t source, int thread_id, const char *text);
-
-// void logger_empty(queue_t *logger_queue);
 
 #define logger_log(queue, source, thread_id, text) (logger_enqueue(queue, LOG_LEVEL_LOG, source, thread_id, text))
 
