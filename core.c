@@ -4,18 +4,19 @@
 
 #include "server.h"
 #include "http.h"
+#include "connection.h"
 
 #define PORT 8080
 
-void handle_connection(int thread_id, int sock_fd, struct sockaddr_in addr)
+void handle_connection(connection_t *conn)
 {
     http_t *http;
-    char temp[32] = {0};
+    char temp[64] = {0};
 
-    http = http_init(sock_fd);
+    http = http_init(conn->sock_fd);
     http_read(http);
 
-    snprintf(temp, 32, "Hello from thread %d\n", thread_id);
+    snprintf(temp, 64, "Port: %d\nDispatcher thread id: %d\nWorker thread id: %d", conn->port, conn->dispatcher_thread_id, conn->worker_thread_id);
     http_write(http, temp, strlen(temp));
 
     http_destroy(http);

@@ -59,6 +59,10 @@ void *dispatcher_thread_worker(void *t_args)
             continue;
         };
 
+        // set the other attributes of the connection
+        args->__conn->port = args->port;
+        args->__conn->dispatcher_thread_id = args->thread_id;
+
         // enqueue the connection
         queue_enqueue(args->connection_queue, args->__conn);
         args->__conn = NULL;

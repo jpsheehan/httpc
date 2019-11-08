@@ -33,7 +33,7 @@ void signal_handler(int sig)
     }
 }
 
-server_t *server_init(void (*handler)(int, int, struct sockaddr_in))
+server_t *server_init(void (*handler)(connection_t *))
 {
     server_t *server = (server_t *)malloc(sizeof(server_t));
 
