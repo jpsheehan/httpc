@@ -8,7 +8,10 @@ all: core
 clean:
 	rm -f *.o core
 
-.PHONY: all clean
+cloc:
+	cloc *.c *.h
+
+.PHONY: all clean cloc
 
 core: core.c $(DEPS)
 	$(CC) $(DEBUG_CFLAGS) -o $@ $^ -lpthread
