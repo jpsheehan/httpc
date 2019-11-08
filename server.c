@@ -40,7 +40,6 @@ server_t *server_init(void (*handler)(int, int, struct sockaddr_in))
     {
         server->connection_handler = handler;
         server->connections = queue_init(CONFIG_CONNECTION_QUEUE_SIZE);
-        server->sock_fd = -1;
     }
 
     return server;
@@ -61,12 +60,6 @@ void server_serve(server_t *server, int port)
 
     int i;
 
-    if ((server->sock_fd = network_get_socket(port)) < 0)
-    {
-        perror("Could not open socket.");
-        exit(EXIT_FAILURE);
-    }
-
     // start workers
     for (i = 0; i < CONFIG_NUM_WORKER_THREADS; ++i)
     {
@@ -78,7 +71,7 @@ void server_serve(server_t *server, int port)
     dispatcher_threads = calloc(CONFIG_NUM_DISPATCHER_THREADS, sizeof(pthread_t));
     for (i = 0; i < CONFIG_NUM_DISPATCHER_THREADS; ++i)
     {
-        dispatcher_args[i] = (dispatcher_thread_args_t){i, server};
+        dispatcher_args[i] = (dispatcher_thread_args_t){i, port + i, server->connections};
         pthread_create(&dispatcher_threads[i], NULL, &dispatcher_thread_worker, &dispatcher_args[i]);
     }
 
@@ -112,8 +105,4 @@ void server_serve(server_t *server, int port)
         client_conn = queue_dequeue(server->connections);
         free(client_conn);
     }
-
-    // close the server connection
-    close(server->sock_fd);
-    server->sock_fd = -1;
 }
