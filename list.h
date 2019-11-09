@@ -1,6 +1,8 @@
 #ifndef LIST_H_
 #define LIST_H_
 
+#include <stdbool.h>
+
 /**
  * The internal representation of a list node.
  */
@@ -88,5 +90,14 @@ void list_for(list_t *t_list, void (*t_handler)(void *, size_t));
  * @returns A new list based on running the function on every element of the list.
  */
 list_t *list_map(list_t *t_list, void *(*t_handler)(void *, size_t));
+
+/**
+ * Calls a function for each element in the list and creates a new list that only contains items that the function returned true for.
+ * 
+ * @param t_list The list.
+ * @param t_handler The function to call. It should return true if the item exists in the new list.
+ * @returns The new filtered list.
+ */
+list_t *list_filter(list_t *t_list, bool (*t_handler)(void *, size_t));
 
 #endif

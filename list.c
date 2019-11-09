@@ -132,6 +132,33 @@ list_t *list_map(list_t *t_list, void *(*t_handler)(void *, size_t))
     return new_list;
 }
 
+list_t *list_filter(list_t *t_list, bool (*t_handler)(void *, size_t))
+{
+    list_t *new_list = NULL;
+    size_t offset = 0;
+
+    while (t_list)
+    {
+        // add the item to the new list if the handler returns true
+        if (t_handler(t_list->data, offset++))
+        {
+            if (new_list)
+            {
+                list_push(new_list, t_list->data);
+            }
+            else
+            {
+                new_list = list_init(t_list->data);
+            }
+        }
+
+        // advance to the next node
+        t_list = t_list->next;
+    }
+
+    return new_list;
+}
+
 // list_t *list_fold(list_t *list, void *(*handler)(void *, void *))
 // {
 // }
