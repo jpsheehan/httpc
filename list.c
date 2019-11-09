@@ -11,6 +11,7 @@ list_t *list_init(void *t_data)
     {
         list->data = t_data;
         list->next = NULL;
+        list->prev = NULL;
     }
 
     return list;
@@ -18,41 +19,52 @@ list_t *list_init(void *t_data)
 
 void list_destroy(list_t *t_list)
 {
+    list_t *cur = list_first_node(t_list);
     list_t *next;
-    while (t_list->next)
+
+    if (cur)
     {
-        next = t_list->next;
-        free(t_list);
-        t_list = next;
+        while (cur->next)
+        {
+            next = cur->next;
+            free(cur);
+            cur = next;
+        }
+
+        free(cur);
     }
-    free(t_list);
 }
 
 void list_destroy_all(list_t *t_list)
 {
+    list_t *cur = list_first_node(t_list);
     list_t *next;
-    if (t_list)
+
+    if (cur)
     {
-        while (t_list->next)
+        while (cur->next)
         {
-            next = t_list->next;
-            free(t_list->data);
-            free(t_list);
-            t_list = next;
+            next = cur->next;
+            free(cur->data);
+            free(cur);
+            cur = next;
         }
-        free(t_list->data);
-        free(t_list);
+
+        free(cur->data);
+        free(cur);
     }
 }
 
 void list_push(list_t *t_list, void *t_data)
 {
-    while (t_list->next)
-    {
-        t_list = t_list->next;
-    }
+    list_t *tail = list_last_node(t_list);
 
-    t_list->next = list_init(t_data);
+    if (tail)
+    {
+        // link the tail in
+        tail->next = list_init(t_data);
+        tail->next->prev = tail;
+    }
 }
 
 void *list_pop(list_t *t_list)
@@ -70,6 +82,8 @@ void *list_pop(list_t *t_list)
 
         data = t_list->data;
         free(t_list);
+
+        // TODO: Fix case where we pop the last element off!
 
         if (prev)
         {
@@ -157,6 +171,56 @@ list_t *list_filter(list_t *t_list, bool (*t_handler)(void *, size_t))
     }
 
     return new_list;
+}
+
+list_t *list_first_node(list_t *t_list)
+{
+    if (t_list)
+    {
+        while (t_list->prev)
+        {
+            t_list = t_list->prev;
+        }
+    }
+    return t_list;
+}
+
+list_t *list_last_node(list_t *t_list)
+{
+    if (t_list)
+    {
+        while (t_list->next)
+        {
+            t_list = t_list->next;
+        }
+    }
+    return t_list;
+}
+
+void *list_first(list_t *t_list)
+{
+    void *first = NULL;
+    list_t *head = list_first_node(t_list);
+
+    if (head)
+    {
+        first = head->data;
+    }
+
+    return first;
+}
+
+void *list_last(list_t *t_list)
+{
+    void *last = NULL;
+    list_t *tail = list_last_node(t_list);
+
+    if (tail)
+    {
+        last = tail->data;
+    }
+
+    return last;
 }
 
 // list_t *list_fold(list_t *list, void *(*handler)(void *, void *))

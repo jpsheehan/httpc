@@ -14,13 +14,18 @@ struct __list_s
     struct __list_s *next;
 
     /**
+     * A pointer to the previous element in the linked list.
+     */
+    struct __list_s *prev;
+
+    /**
      * A pointer to the actual data.
      */
     void *data;
 };
 
 /**
- * Represents a node in a linked list.
+ * Represents a node in a double linked list.
  */
 typedef struct __list_s list_t;
 
@@ -46,6 +51,38 @@ void list_destroy(list_t *t_list);
  * @param t_list The list.
  */
 void list_destroy_all(list_t *t_list);
+
+/**
+ * Gets the first list node.
+ * 
+ * @param t_list The list.
+ * @returns A pointer to the first node in the list or NULL upon failure.
+ */
+list_t *list_first_node(list_t *t_list);
+
+/**
+ * Gets the last list node.
+ * 
+ * @param t_list The list.
+ * @returns A pointer to the last node in the list or NULL upon failure.
+ */
+list_t *list_last_node(list_t *t_list);
+
+/**
+ * Gets the first list item.
+ * 
+ * @param t_list The list.
+ * @returns A pointer to the first list item.
+ */
+void *list_first(list_t *t_list);
+
+/**
+ * Gets the last list item.
+ * 
+ * @param t_list The list.
+ * @returns A pointer to the last list item.
+ */
+void *list_last(list_t *t_list);
 
 /**
  * Pushes an element onto the end of the list.
