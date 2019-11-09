@@ -3,73 +3,73 @@
 
 #include "list.h"
 
-list_t *list_init(void *data)
+list_t *list_init(void *t_data)
 {
     list_t *list = malloc(sizeof(list_t));
 
     if (list)
     {
-        list->data = data;
+        list->data = t_data;
         list->next = NULL;
     }
 
     return list;
 }
 
-void list_destroy(list_t *list)
+void list_destroy(list_t *t_list)
 {
     list_t *next;
-    while (list->next)
+    while (t_list->next)
     {
-        next = list->next;
-        free(list);
-        list = next;
+        next = t_list->next;
+        free(t_list);
+        t_list = next;
     }
-    free(list);
+    free(t_list);
 }
 
-void list_destroy_all(list_t *list)
+void list_destroy_all(list_t *t_list)
 {
     list_t *next;
-    if (list)
+    if (t_list)
     {
-        while (list->next)
+        while (t_list->next)
         {
-            next = list->next;
-            free(list->data);
-            free(list);
-            list = next;
+            next = t_list->next;
+            free(t_list->data);
+            free(t_list);
+            t_list = next;
         }
-        free(list->data);
-        free(list);
+        free(t_list->data);
+        free(t_list);
     }
 }
 
-void list_push(list_t *list, void *data)
+void list_push(list_t *t_list, void *t_data)
 {
-    while (list->next)
+    while (t_list->next)
     {
-        list = list->next;
+        t_list = t_list->next;
     }
 
-    list->next = list_init(data);
+    t_list->next = list_init(t_data);
 }
 
-void *list_pop(list_t *list)
+void *list_pop(list_t *t_list)
 {
     list_t *prev = NULL;
     void *data = NULL;
 
-    if (list)
+    if (t_list)
     {
-        while (list->next)
+        while (t_list->next)
         {
-            prev = list;
-            list = list->next;
+            prev = t_list;
+            t_list = t_list->next;
         }
 
-        data = list->data;
-        free(list);
+        data = t_list->data;
+        free(t_list);
 
         if (prev)
         {
@@ -80,40 +80,42 @@ void *list_pop(list_t *list)
     return data;
 }
 
-int list_length(list_t *list)
+int list_length(list_t *t_list)
 {
     int length = 0;
 
-    if (list)
+    if (t_list)
     {
         ++length;
-        while (list->next)
+        while (t_list->next)
         {
             ++length;
-            list = list->next;
+            t_list = t_list->next;
         }
     }
 
     return length;
 }
 
-void list_for(list_t *list, void (*handler)(void *))
+void list_for(list_t *t_list, void (*handler)(void *, size_t))
 {
-    while (list)
+    size_t index = 0;
+    while (t_list)
     {
-        handler(list->data);
-        list = list->next;
+        handler(t_list->data, index++);
+        t_list = t_list->next;
     }
 }
 
-list_t *list_map(list_t *list, void *(*handler)(void *))
+list_t *list_map(list_t *t_list, void *(*t_handler)(void *, size_t))
 {
     list_t *new_list = NULL;
     void *data;
+    size_t index = 0;
 
-    while (list)
+    while (t_list)
     {
-        data = handler(list->data);
+        data = t_handler(t_list->data, index++);
 
         if (new_list)
         {
@@ -124,7 +126,7 @@ list_t *list_map(list_t *list, void *(*handler)(void *))
             new_list = list_init(data);
         }
 
-        list = list->next;
+        t_list = t_list->next;
     }
 
     return new_list;
